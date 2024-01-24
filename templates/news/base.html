@@ -28,14 +28,28 @@
       <div class="col-lg-12 col-md-12 col-sm-12">
         <div class="header_top">
           <div class="header_top_left">
-            <ul class="top_nav">
-              <li><a href="{% url 'home_page' %}">BOSH SAHIFA</a></li>
-              <li><a href="{% url 'about_page' %}">BIZ HAQIMIZDA</a></li>
-              <li><a href="{% url 'contact_page' %}">BIZ BILAN ALOQA</a></li>
-            </ul>
+              <ul class="top_nav">
+                  <li><a href="{% url 'home_page' %}">BOSH SAHIFA</a></li>
+                  <li><a href="{% url 'about_page' %}">BIZ HAQIMIZDA</a></li>
+                  <li><a href="{% url 'contact_page' %}">BIZ BILAN ALOQA</a></li>
+                  {% if user.is_authenticated and user.is_superuser %}
+                      <li><a href="{% url 'admin_page' %}">Admin sahifasi</a> </li>
+                  {% endif %}
+              </ul>
           </div>
           <div class="header_top_right">
-            <p>{% now "jS F Y H:i" %}</p>
+          
+              {% if user.is_authenticated %}
+                  <p><a href="{% url 'logout' %}" style="color: deeppink">Logout</a> </p>
+                  <p><a href="{% url "user_profile" %}" style="color: hotpink">My profile</a></p>
+              {% else %}
+                  <p><a href="{% url "login" %}" style="color: deeppink">Saytga kirish</a></p>
+              {% endif %}
+                
+              
+              <p>{% now "jS F Y H:i" %}</p>
+              
+              
           </div>
         </div>
       </div>
@@ -60,7 +74,12 @@
           <li><a href="{% url 'technology_news_page' %}">TEXNOLOGIYA</a></li>
           <li><a href="{% url 'sport_news_page' %}">SPORT</a></li>
           <li><a href="{% url 'contact_page' %}">BIZ BILAN ALOQA</a></li>
-          <li><a href="{% url 'page_not_found' %}">404 Page</a></li>
+{#          <li><a href="{% url 'page_not_found' %}">404 Page</a></li>#}
+          <li>
+              <form method="get" action="{% url "search_results" %}">
+                  <input type="search" name="q" placeholder="Qidiruv..." class="form-control">    
+              </form>
+          </li>
         </ul>
       </div>
     </nav>

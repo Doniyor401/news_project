@@ -10,4 +10,3 @@ def latest_news(request):
         "kategoriya": kategoriya,
     }
     return context
-

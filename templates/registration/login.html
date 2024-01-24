@@ -1,0 +1,17 @@
+{% extends 'news/base.html' %}
+{% load static %}
+{% block title %} Login sahafasi {% endblock title %}
+
+
+{% block content %}
+    <h2>Veb-saytga kirish - login</h2>
+    <p>Iltimos saytga kirish uchun quydagi formani to'ldiring</p>
+
+    <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+    <h5>Agar parolingizni unutgan bo'lsangiz, uni <a href="{% url 'password_reset' %}" style="color: hotpink">"tiklang" !</a> </h5>
+    <p><h5>Agar ro'yxatdan o'tmagan bo'lsangiz <a href="{% url 'user_register' %}" style="color: deeppink">"REGISTRATSIYADAN O'TISH"</a> ni bosing</h5></p>
+
+{% endblock content %}

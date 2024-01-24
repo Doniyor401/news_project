@@ -1,13 +1,25 @@
 from urllib import request
-
-from django.shortcuts import render, get_object_or_404, Http404
+from django.urls import reverse_lazy
+from django.db.models import Q
+from django.shortcuts import render, get_object_or_404
+from django.utils.text import slugify
 from .models import News, Category
-from django.views.generic import ListView, DetailView, TemplateView
-from .forms import ContactForm
+from django.views.generic import ListView, DetailView, TemplateView, UpdateView, DeleteView, CreateView, FormView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from .forms import ContactForm, CommentForm
 from django.http import HttpResponse
+from config.custom_permissions import OnlyLoggedSuperUser
+from hitcount.models import HitCount
+from hitcount.views import HitCountMixin, HitCountDetailView
+from hitcount.utils import get_hitcount_model
+
+
 # Create your views here.
 
 
+@login_required
 def news_list(request):
     # news_list = News.objects.filter(status=News.Status.Published)
     news_list = News.published.all()
@@ -28,12 +40,47 @@ def news_list(request):
 
 def news_detail(request, news):
     news = get_object_or_404(News, slug=news, status=News.Status.Published)
+    context = {}
+    #hitcount logic - ya'ni nechta odam korganini qilish eng tepada from qib olingani joylari bor
+    hit_count = get_hitcount_model().objects.get_for_object(news)
+    hits = hit_count.hits
+    hitcontext = context['hitcount'] = {'pk': hit_count.pk}
+    hit_count_response = HitCountMixin.hit_count(request, hit_count)
+    if hit_count_response.hit_counted:
+        hits = hits + 1
+        hitcontext['hit_counted'] = hit_count_response.hit_counted
+        hitcontext['hit_message'] = hit_count_response.hit_message
+        hitcontext['total_hits'] = hits
 
+    comments = news.comments.filter(active=True)
+    comment_count = comments.count()
+    new_comment = None
+    if request.method == "POST":
+        comment_form = CommentForm(data=request.POST)
+        if comment_form.is_valid():
+            # yangi comment obyektini yaratamiz lk malumotlar bazasiga saqlamaymiz
+            new_comment = comment_form.save(commit=False)
+            new_comment.news = news
+            # coment egasini sorov yuborayotgan userga bog'ladik
+            new_comment.user = request.user
+            # ma'lumotlar bazasiga saqlaymiz
+            new_comment.save()
+            # bu kod bilan commenti yuborganimizdan song coment yozadigan joyni tozalab qoysak boladi. Oxirgi yozganimiz turmidi shunda
+            comment_form = CommentForm()
+    else:
+        comment_form = CommentForm()
     context = {
-        "news": news
+        "news": news,
+        "comments": comments,
+        "comment_count": comment_count,
+        "new_comment": new_comment,
+        "comment_form": comment_form,
     }
 
     return render(request, "news/news_detail.html", context)
+
+
+
 
 
 # class NewsDetailView(DetailView):
@@ -47,7 +94,7 @@ def news_detail(request, news):
 #         return render(request, self.template_name, context)
 
 
-
+# @login_required
 # def homePageView(request):
 #     categories = Category.objects.all()
 #     news_list = News.published.all().order_by('-publish_time')[:5]
@@ -60,7 +107,7 @@ def news_detail(request, news):
 #         "local_one": local_one,
 #     }
 #     return render(request, "news/home.html", context)
-class HomePageViwe(ListView):
+class HomePageView(ListView):
     model = News
     template_name = "news/home.html"
     context_object_name = 'news'
@@ -77,7 +124,7 @@ class HomePageViwe(ListView):
         return context
 
 
-
+# @login_required
 # def contactPageView(request):
 #     form = ContactForm(request.POST or None)
 #     if request.method == "POST" and form.is_valid():
@@ -116,12 +163,12 @@ def aboutPageView(request):
     return render(request, "news/about.html")
 
 
+@login_required
 def pageNotView(request):
     context = {
 
     }
     return render(request, "news/404.html")
-
 
 
 class LocalNewsView(ListView):
@@ -133,6 +180,7 @@ class LocalNewsView(ListView):
         news = self.model.published.all().filter(category__name="Mahalliy")
         return news
 
+
 class ForeignNewsView(ListView):
     model = News
     template_name = "news/xorij.html"
@@ -142,6 +190,7 @@ class ForeignNewsView(ListView):
         news = self.model.published.all().filter(category__name="Xorij")
         return news
 
+
 class TechnologyNewsView(ListView):
     model = News
     template_name = "news/texnologiya.html"
@@ -150,6 +199,7 @@ class TechnologyNewsView(ListView):
     def get_queryset(self):
         news = self.model.published.all().filter(category__name="Texnologiya")
         return news
+
 
 class SportNewsView(ListView):
     model = News
@@ -161,10 +211,47 @@ class SportNewsView(ListView):
         return news
 
 
-def getAllCategory(request):
-    cat = Category.objects.all()
+class NewsUpdateView(OnlyLoggedSuperUser, UpdateView):
+    model = News
+    fields = ('title', 'body', 'image', 'category', 'status')
+    template_name = 'crud/news_edit.html'
+
+
+class NewsDeleteView(OnlyLoggedSuperUser, DeleteView):
+    model = News
+    template_name = 'crud/news_delete.html'
+    success_url = reverse_lazy('home_page')
+
+
+class NewsCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = News
+    template_name = 'crud/news_cread.html'
+    fields = ('title', 'slug', 'body', 'image', 'category', 'status')
+
+
+     # bundan oldingi classda onsonro yoli bol 1 ta .py faylda yozilib xammasiga inherit qilingani OnlyLoggedSuperUser db yozilgani
+    def test_func(self):
+        return self.request.user.is_superuser
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_page_view(request):
+    admin_user = User.objects.filter(is_superuser=True)
 
     context = {
-        "category": cat
+        'admin_user': admin_user
     }
-    return context
+    return render(request, 'pages/admin_page.html', context)
+
+class SearchResultsList(ListView):
+    model = News
+    template_name = 'news/search_result.html'
+    context_object_name = 'barcha_yangiliklar'
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        return News.objects.filter(
+            Q(title__icontains=query) | Q(body__icontains=query)
+        )
+

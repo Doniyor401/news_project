@@ -26,6 +26,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "news_app.apps.NewsAppConfig",
+    "accounts.apps.AccountsConfig",
+    'hitcount',
+    'fontawesomefree',
 ]
 
 MIDDLEWARE = [
@@ -122,5 +125,9 @@ MEDIA_ROOT = "media/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+LOGIN_REDIRECT_URL = 'home_page'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+LOGIN_URL = 'login'
 

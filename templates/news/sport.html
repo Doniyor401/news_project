@@ -1,5 +1,6 @@
 {% extends 'news/base.html' %}
 {% load static %}
+{% load hitcount_tags %}
 
 {% block title %}Sport habarlar{% endblock title %}
 
@@ -17,6 +18,7 @@
                           <figure class="bsbig_fig"> <a href="{{ news.get_absolute_url }}" class="featured_img"> <img alt="" src="{{ news.image.url }}"> <span class="overlay"></span> </a>
                               <figcaption> <a href="{{ news.get_absolute_url }}">{{ news.title|truncatewords:5 }}</a> </figcaption>
                               <p>{{ news.title }}</p>
+                              <p style="color: hotpink">Ko'rilganlar soni: <i class="fa fa-eye" aria-hidden="true"></i> {% get_hit_count for news %}</p>
                           </figure>
                       </li>
                   {% endfor %}
