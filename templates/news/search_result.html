@@ -11,6 +11,7 @@
         <h3><a href="{% url 'news_detail_page' yangilik.slug %}" style="color: hotpink">{{ yangilik.title }}</a></h3>
         <p><img src="{{ yangilik.image.url }}" width="20%"></p>
         <p>{{ yangilik.body|truncatewords:30 }}</p>
+        <p>{{ yangilik.created_time }}</p>
         <hr>
     {% endfor %}
     

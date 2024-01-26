@@ -177,7 +177,7 @@ class LocalNewsView(ListView):
     context_object_name = "mahalliy_yangiliklar"
 
     def get_queryset(self):
-        news = self.model.published.all().filter(category__name="Mahalliy")
+        news = self.model.published.all().filter(Q(category__name="Mahalliy") | Q(category__name="Local") | Q(category__name="Местный"))
         return news
 
 
@@ -187,7 +187,7 @@ class ForeignNewsView(ListView):
     context_object_name = "xorij_yangiliklar"
 
     def get_queryset(self):
-        news = self.model.published.all().filter(category__name="Xorij")
+        news = self.model.published.all().filter(Q(category__name="Xorij") | Q(category__name="За границей") | Q(category__name="Abroad"))
         return news
 
 
@@ -197,7 +197,7 @@ class TechnologyNewsView(ListView):
     context_object_name = "texnologik_yangiliklar"
 
     def get_queryset(self):
-        news = self.model.published.all().filter(category__name="Texnologiya")
+        news = self.model.published.all().filter(Q(category__name="Texnologiya") | Q(category__name="Technology") | Q(category__name="Технологии"))
         return news
 
 
@@ -207,7 +207,7 @@ class SportNewsView(ListView):
     context_object_name = "sport_yangiliklar"
 
     def get_queryset(self):
-        news = self.model.published.all().filter(category__name="Sport")
+        news = self.model.published.all().filter(Q(category__name="Sport") | Q(category__name="Спорт") | Q(category__name="Sports"))
         return news
 
 
@@ -226,7 +226,7 @@ class NewsDeleteView(OnlyLoggedSuperUser, DeleteView):
 class NewsCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = News
     template_name = 'crud/news_cread.html'
-    fields = ('title', 'slug', 'body', 'image', 'category', 'status')
+    fields = ('title', 'title_uz', 'title_en', 'title_ru', 'slug', 'body', 'body_uz', 'body_en', 'body_ru', 'image', 'category', 'status')
 
 
      # bundan oldingi classda onsonro yoli bol 1 ta .py faylda yozilib xammasiga inherit qilingani OnlyLoggedSuperUser db yozilgani

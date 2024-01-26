@@ -6,9 +6,9 @@
 
 {% block content %}
     <h2>{{ news.title }}</h2>
-    <h5>{{ news.publish_time }} | <i class="fa fa-eye" aria-hidden="true"></i> {% get_hit_count for news %} 
+    <h5>{{ news.publish_time }} | <i class="fa fa-eye" aria-hidden="true"></i> {% get_hit_count for news %}
         |  <i class="fa fa-comment" aria-hidden="true"></i> {{ comment_count }}</h5>
-    
+
     <img src="{{ news.image.url }}" >
     
 
@@ -18,13 +18,14 @@
         <p>{{ news.body }}</p>
     </div>
     
+    
     {% if request.user.is_authenticated and request.user.is_superuser %}
         <div class="card-footer text-center">
             <a href="{% url 'news_update' news.slug %}"> Tahrirlash |</a>
             <a href="{% url 'news_delete' news.slug %}"> O'chirish </a>
         </div>
     {% endif %} <br>
-    
+
     {% if comment_count > 1 %}
         <h3>Bu yangilikka {{ comment_count }} ta izoh qoldirilgan</h3>
     {% endif %}
@@ -39,8 +40,9 @@
             </p>
         
             {{ comment.body|linebreaks }}
+            <hr>
         </div>
-        
+
     {% endfor %}
     
     {% if user.is_authenticated %}
